@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1">
+
+    <title>Open Weather site</title>
+
+    <!-- Loading third party fonts -->
+    <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,700|" rel="stylesheet" type="text/css">
+    <link href="fonts/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Loading main css file -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+
+<body ng-app="myApp" ng-controller="HomeController">
+
+<div class="site-content" style="background-image: url('images/banner.png') ">
+    <div class="content white-font" >
+        <div class="container">
+            <form action="#" class="find-location">
+                <input type="text" placeholder="Find the location..." ng-model="search" list="allcitydatalist"> <input class="btn btn-primary" ng-click="changeTheForecast(search)" type="button" value="ok">
+                <datalist id="allcitydatalist">
+                    <option ng-repeat="x in allCity | filter:search" value="{{x.name}}">{{x.name}}</option>
+                </datalist>
+                <div  ng-model="selectedElement">
+                    <table dir="ltr" class="selected">
+                        <!-- list of the cities that we were searched -->
+                    </table>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <div class="forecast-table white-font">
+        <div class="container">
+            <div class="forecast-container">
+                <div class="today forecast">
+                    <div class="forecast-header">
+                        <div class="day">{{list_of_forecast.list[0].dt*1000 | date}}</div>
+                    </div> <!-- .forecast-header -->
+                    <div class="forecast-content">
+                        <div class="location" style="font-size: 24px;">{{list_of_forecast.city.name}}</div>
+                        <div class="degree">
+                            <div class="num">{{list_of_forecast.list[0].temp.day  - 273.15 | number : 1}}<sup>o</sup>C</div>
+                        </div>
+                        <h1>{{list_of_forecast.list[0].weather[0].description}}</h1>
+                    </div>
+                </div>
+
+
+                <div class="forecast" ng-repeat="x in list_of_forecast.list" ng-if="$index>=1">
+                    <div class="forecast-header">
+                        <div class="day">{{x.dt*1000 | date}}</div>
+                    </div> <!-- .forecast-header -->
+                    <div class="forecast-content">
+                        <div class="degree">{{x.temp.day  - 273.15 | number : 1}}<sup>o</sup>C</div>
+                        <small>{{x.temp.min  - 273.15 | number : 1}}<sup>o</sup></small>
+                        <br>
+                        <br>
+                        <h3>{{x.weather[0].description}}</h3>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="color: black; !important;">
+
+
+        <h2 style="color: white; !important;">Add Reminder</h2>
+        <input type="date" ng-model="selectedDate" id="reminder" name="reminder">
+        <input type="text" style="width: 400px;" ng-model="selectedNote" placeholder="Please add reminder title ...">
+        <input type="button" value="add reminder" ng-click="addReminder(selectedDate,selectedNote)">
+
+
+    </div>
+
+    <!-- Modal -->
+    <div style="display: none;color: black; !important;" class="pop-outer">
+        <div class="pop-inner">
+            <button ng-click="hideModal()" class="close">X</button>
+            <h2>Reminder</h2>
+            <p>{{reminderText}}</p>
+        </div>
+    </div>
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+</div>
+
+
+
+<script src="js/angular.min.js"></script>
+<script src="js/script.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
