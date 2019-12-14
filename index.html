@@ -19,43 +19,59 @@
 </head>
 
 
-<body ng-app="myApp" ng-controller="HomeController">
+<body ng-app="myApp" ng-controller="HomeController as vm">
 
 <div class="site-content" style="background-image: url('images/banner.png') ">
     <div class="content white-font" >
         <div class="container">
             <form action="#" class="find-location">
-                <input type="text" placeholder="Find the location..." ng-model="search" list="allcitydatalist"> <input class="btn btn-primary" ng-click="changeTheForecast(search)" type="button" value="ok">
-                <datalist id="allcitydatalist">
-                    <option ng-repeat="x in allCity | filter:search" value="{{x.name}}">{{x.name}}</option>
-                </datalist>
+                <input type="text" name="country" id="country" ng-model="vm.search" ng-keyup="vm.complete(vm.search)" />   <input class="btn btn-primary" ng-click="vm.changeTheForecast(vm.search)" type="button" value="ok">
+                <ul class="list-group" ng-model="vm.hidethis" ng-hide="vm.hidethis">
+                    <li class="list-group-item" ng-repeat="x in vm.filterCountry"  ng-click="vm.fillTextbox(x)">{{x}}</li>
+                </ul>
+
                 <div  ng-model="selectedElement">
-                    <table dir="ltr" class="selected">
-                        <!-- list of the cities that we were searched -->
+                    <table dir="ltr" class="selected" ng-model="selected">
+                        <tr ng-repeat="x in vm.searched" class="addelement">
+                                    <td>
+                                        <li class="pull-left"></li>{{x}}
+                                    </td>
+                                    <td>
+                                        <button type="button" aria-label="View">
+                                            <span ng-click="vm.viewCity($event)" class="{{x}}" aria-hidden="true">view</span>
+                                        </button>
+                                     </td>
+                                     <td>
+                                          <button type="button" aria-label="View" class="x">
+                                              <span ng-click="vm.deleteCity($event)" class="{{ x }}" aria-hidden="true">x</span>
+                                          </button>
+                                     </td>
+                        </tr>
                     </table>
                 </div>
             </form>
 
         </div>
     </div>
+
     <div class="forecast-table white-font">
         <div class="container">
             <div class="forecast-container">
                 <div class="today forecast">
                     <div class="forecast-header">
-                        <div class="day">{{list_of_forecast.list[0].dt*1000 | date}}</div>
+                        <div class="day">{{vm.list_of_forecast.list[0].dt*1000 | date}}</div>
                     </div> <!-- .forecast-header -->
                     <div class="forecast-content">
-                        <div class="location" style="font-size: 24px;">{{list_of_forecast.city.name}}</div>
+                        <div class="location" style="font-size: 24px;">{{vm.list_of_forecast.city.name}}</div>
                         <div class="degree">
-                            <div class="num">{{list_of_forecast.list[0].temp.day  - 273.15 | number : 1}}<sup>o</sup>C</div>
+                            <div class="num">{{vm.list_of_forecast.list[0].temp.day  - 273.15 | number : 1}}<sup>o</sup>C</div>
                         </div>
-                        <h1>{{list_of_forecast.list[0].weather[0].description}}</h1>
+                        <h1>{{vm.list_of_forecast.list[0].weather[0].description}}</h1>
                     </div>
                 </div>
 
 
-                <div class="forecast" ng-repeat="x in list_of_forecast.list" ng-if="$index>=1">
+                <div class="forecast" ng-repeat="x in vm.list_of_forecast.list" ng-if="$index>=1">
                     <div class="forecast-header">
                         <div class="day">{{x.dt*1000 | date}}</div>
                     </div> <!-- .forecast-header -->
@@ -77,19 +93,19 @@
 
 
         <h2 style="color: white; !important;">Add Reminder</h2>
-        <input type="date" ng-model="selectedDate" id="reminder" name="reminder">
-        <input type="text" style="width: 400px;" ng-model="selectedNote" placeholder="Please add reminder title ...">
-        <input type="button" value="add reminder" ng-click="addReminder(selectedDate,selectedNote)">
+        <input type="date" ng-model="vm.selectedDate" id="reminder" name="reminder">
+        <input type="text" ng-model="vm.selectedNote" style="width: 400px;"  placeholder="Please add reminder title ...">
+        <input type="button" value="add reminder" ng-click="vm.addReminder(vm.selectedDate,vm.selectedNote)">
 
 
     </div>
 
     <!-- Modal -->
-    <div style="display: none;color: black; !important;" class="pop-outer">
+    <div style="color: black; !important;" class="pop-outer" ng-show="vm.showModalPopups">
         <div class="pop-inner">
-            <button ng-click="hideModal()" class="close">X</button>
+            <button ng-click="vm.hideModal()" class="close">X</button>
             <h2>Reminder</h2>
-            <p>{{reminderText}}</p>
+            <p>{{vm.reminderText}}</p>
         </div>
     </div>
 
@@ -105,6 +121,9 @@
 
 <script src="js/angular.min.js"></script>
 <script src="js/script.js"></script>
+<script src="js/services/myLocationApi.js"></script>
+<script src="js/services/ForecastApi.js"></script>
+<script src="js/services/Pal_citiesApi.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 

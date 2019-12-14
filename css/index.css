@@ -17,3 +17,12 @@
 .white-font{
     color: white;
 }
+
+li{
+    cursor:pointer;
+    color: black;
+}
+li:hover
+{
+    background-color:#f9f9f9;
+}

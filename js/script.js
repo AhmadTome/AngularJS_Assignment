@@ -1,11 +1,14 @@
 var apikey = "2f8796eefe67558dc205b09dd336d022";
 
-var app = angular.module("myApp", []);
+var app = angular.module("myApp", ['myLocationApi','ForecastApi','Pal_citiesApi']);
+
 
 // Controllers
-app.controller('HomeController', function ($scope,$http,$compile) {
-    $scope.reminderText = 'here is the note';
+app.controller('HomeController', function ($http,$compile, myLocationApi , ForecastApi , Pal_citiesApi) {
+    var vm = this;
+    vm.searched = [];
 
+    vm.reminderText = 'here is the note';
     // Show The Popups if we have reminder today
     if(localStorage.getItem("usersInfo")){
         var today = new Date().toJSON().slice(0,10).replace(/-/g,'/');
@@ -15,8 +18,8 @@ app.controller('HomeController', function ($scope,$http,$compile) {
                 var reminder_arr = obj[i].appointment;
                 for(var j =0 ; j<reminder_arr.length;j++){
                   if((reminder_arr[j].date).slice(0,10).replace(/-/g,'/') == today&&reminder_arr[j].shown ==false){
-                        $scope.reminderText = reminder_arr[j].note;
-                        $(".pop-outer").fadeIn("slow");
+                        vm.reminderText = reminder_arr[j].note;
+                      vm.showModalPopups=true;
                         reminder_arr[j].shown=true;
                     }
                 }
@@ -27,44 +30,71 @@ app.controller('HomeController', function ($scope,$http,$compile) {
     }
 
     // find My location using free API
-    var myLocation_url = "http://www.geoplugin.net/json.gp";
-    $http.get(myLocation_url).success(function (data) {
-        $scope.myCity = data.geoplugin_city;
-        $scope.lat = data.geoplugin_latitude;
-        $scope.lon = data.geoplugin_longitude;
 
-        // if the city not exist we will search by latitude and longitude
-        if($scope.myCity)
-            var openWeatherUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?q="+$scope.myCity+"&cnt=7&appid="+apikey;
-        else
-            var openWeatherUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?lat="+$scope.lat+"&lon="+$scope.lon+"&cnt=7&appid="+apikey;
+    var myLocation_url = myLocationApi.myLocationUrl();
+    $http.get(myLocation_url).success(function (data) {
+        vm.myCity = data.geoplugin_city;
+        vm.lat = data.geoplugin_latitude;
+        vm.lon = data.geoplugin_longitude;
+
 
         // API Key 2f8796eefe67558dc205b09dd336d022
         // find the Forecast for 7 days (a week) starting from today
+        var openWeatherUrl = ForecastApi.ForecastUrl(vm.myCity,vm.lat,vm.lon);
         $http.get(openWeatherUrl).success(function (data) {
-            $scope.list_of_forecast = data;
+            vm.list_of_forecast = data;
         });
 
         // find the list of all cities that we can searched
-        var cities_url = "https://api.myjson.com/bins/kfvmg";
-        $http.get("https://api.myjson.com/bins/kfvmg").success(function (data) {
-            $scope.allCity  = data;
+        var cities_url = Pal_citiesApi.Pal_citiesUrl() ;
+        $http.get(cities_url).success(function (data) {
+            vm.allCity = [];
+            for(var i=0;i<data.length;i++){
+                vm.allCity.push(data[i].name)
+            }
+            console.log(vm.allCity)
         });
     });
 
+    vm.complete = function(string){
+
+        vm.hidethis = false;
+        var output = [];
+        angular.forEach(vm.allCity, function(country){
+
+            if(country.toLowerCase().indexOf(string.toLowerCase()) >= 0)
+            {
+                output.push(country);
+            }
+        });
+        vm.filterCountry = output;
+        console.log(vm.filterCountry)
+
+    }
+    vm.fillTextbox = function(string){
+        vm.search = string;
+        vm.hidethis = true;
+    }
 
     // List of the Events
     // change the forecast to a new city (the city what we searched before and listed under the search term)
-    $scope.viewCity = function(event){
-        $scope.myCity  = event.target.id;
-        var openWeatherUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?q="+$scope.myCity+"&cnt=7&appid="+apikey;
+    vm.viewCity = function(event){
+
+        vm.myCity  = event.target.className;
+        var openWeatherUrl = ForecastApi.ForecastUrl(vm.myCity,vm.lat,vm.lon);
         $http.get(openWeatherUrl).success(function (data) {
-            $scope.list_of_forecast = data;
+            vm.list_of_forecast = data;
         });
     };
 
+    // change the forecast to a new city (the city what we searched before and listed under the search term)
+    vm.deleteCity = function(event){
+        vm.myCity  = event.target.className;
+        vm.searched = vm.searched.filter(e => e !== vm.myCity);
+    };
+
     // change the forecast to a new city (the city what we searched) and add the city under the search term as a backup
-    $scope.changeTheForecast = function (city) {
+    vm.changeTheForecast = function (city) {
 
         if(localStorage.getItem("usersInfo")){
             var obj = JSON.parse(localStorage.getItem("usersInfo")) ;
@@ -81,40 +111,28 @@ app.controller('HomeController', function ($scope,$http,$compile) {
             obj = JSON.stringify(obj);
            localStorage.setItem("usersInfo",obj);
         }
-        $scope.myCity = city ;
-        var openWeatherUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?q="+$scope.myCity+"&cnt=7&appid="+apikey;
+        vm.myCity = city ;
+        var openWeatherUrl = ForecastApi.ForecastUrl(vm.myCity,vm.lat,vm.lon);
         $http.get(openWeatherUrl).success(function (data) {
-            $scope.list_of_forecast = data;
+            vm.list_of_forecast = data;
         });
 
-        $(".selected").append('' +
-            '        <tr class="addelement">>' +
-            '        <td><li class="pull-left"></li>'+  $scope.search  +'</td>' +
-            '        <td>' +
-            '               <button type="button" aria-label="View"> ' +
-            '                    <span ng-click="viewCity($event)" id="'+  $scope.search  +'" aria-hidden="true">view</span>' +
-            '               </button>' +
-            '        </td>' +
-            '        <td>' +
-            '               <button type="button" aria-label="View" class="x"> ' +
-            '                    <span aria-hidden="true">x</span>' +
-            '               </button>' +
-            '        </td>' +
-            '      </tr>' +
-            '');
-        $(".x").on("click",function () {
-            $(this).closest('.addelement').remove();
-        });
-        $compile( $(".selected"))($scope);
+
+        vm.searched.push(vm.search)
+        $compile( vm.selected)(vm);
+
+
     };
 
     // Add new Reminder
-    $scope.addReminder = function (date,note) {
-        date = $('#reminder').val();
+    vm.addReminder = function (date,note) {
+
+        date = document.querySelector('#reminder').value;
         while (date.indexOf('-') > -1){
             date = date.replace('-','/');
         }
         console.log(date)
+        console.log(note)
         if(localStorage.getItem("usersInfo")){
             var obj = JSON.parse(localStorage.getItem("usersInfo")) ;
             for(var i=0;i<obj.length;i++){
@@ -136,9 +154,8 @@ app.controller('HomeController', function ($scope,$http,$compile) {
     };
 
     // Hide the Popups
-    $scope.hideModal = function(){
-        $(".pop-outer").fadeOut("slow");
-
+    vm.hideModal = function(){
+        vm.showModalPopups = false;
     };
 });
 
